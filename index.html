@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Midnight at the Museum</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,500&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0c0a1d;--ink:#f4f0ff;--muted:#9a93c4;--pink:#ff4fa3;--cyan:#38e8ff;--gold:#ffd166;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f3efff;--ink:#1b1540;--muted:#6a62a0}}
+:root[data-theme="light"]{--bg:#f3efff;--ink:#1b1540;--muted:#6a62a0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;overflow-x:hidden;position:relative}
+body:before{content:"";position:fixed;top:0;left:50%;width:140vmin;height:100vh;transform:translateX(-50%);background:conic-gradient(from 180deg at 50% 0,transparent 160deg,rgba(255,209,102,.22) 180deg,transparent 200deg);pointer-events:none}
+.wrap{position:relative;width:min(92vw,440px);text-align:center;padding:16px}
+.tag{font-size:11px;letter-spacing:.35em;text-transform:uppercase;color:var(--cyan)}
+.frame{margin:16px auto;width:220px;height:220px;padding:10px;background:linear-gradient(135deg,var(--gold),#b8862b);border-radius:6px;box-shadow:0 0 40px rgba(255,209,102,.35);animation:sway 5s ease-in-out infinite}
+.art{width:100%;height:100%;border-radius:2px;background:#120d2e;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:76px}
+.art i{position:absolute;border-radius:50%;filter:blur(18px);opacity:.75;animation:drift 6s ease-in-out infinite alternate}
+.art i:nth-child(1){width:110px;height:110px;background:var(--pink);left:-20px;top:-10px}
+.art i:nth-child(2){width:100px;height:100px;background:var(--cyan);right:-20px;bottom:-10px;animation-delay:-3s}
+.art b{position:absolute;right:6px;bottom:6px;z-index:3;font-size:30px;font-weight:400;background:rgba(12,10,29,.65);border-radius:12px;padding:2px 6px}
+@keyframes sway{50%{transform:rotate(1.5deg)}}
+@keyframes drift{to{transform:translate(30px,20px) scale(1.2)}}
+h1{font-family:"Playfair Display",Georgia,serif;font-size:clamp(26px,7vw,36px);line-height:1.15;margin:8px 0}
+h1 em{color:var(--pink)}
+.sub{color:var(--muted);margin:0 0 18px;min-height:1.4em}
+.btns{display:flex;align-items:center;justify-content:center;gap:16px;min-height:130px;flex-wrap:wrap}
+button{font-family:inherit;font-weight:600;border:0;cursor:pointer;border-radius:14px;transition:all .25s ease}
+#yes{background:linear-gradient(135deg,var(--pink),#ff7a59);color:#fff;font-size:20px;padding:14px 34px;box-shadow:0 0 28px rgba(255,79,163,.55)}
+#no{background:transparent;color:var(--cyan);border:2px solid var(--cyan);font-size:20px;padding:14px 34px;white-space:nowrap;box-shadow:0 0 16px rgba(56,232,255,.35)}
+#no.float{position:fixed;z-index:30}
+#yes.big{position:fixed;inset:0;border-radius:0;z-index:4;width:100%;height:100%}
+.hint{font-size:13px;color:var(--muted);margin-top:14px}
+#stage{display:none}
+.ticket{margin:18px auto;background:var(--ink);color:var(--bg);border-radius:14px;padding:18px;text-align:left;position:relative;box-shadow:0 0 40px rgba(56,232,255,.3)}
+.ticket:before,.ticket:after{content:"";position:absolute;top:50%;width:22px;height:22px;border-radius:50%;background:var(--bg);transform:translateY(-50%)}
+.ticket:before{left:-11px}.ticket:after{right:-11px}
+.ticket small{font-size:10px;letter-spacing:.3em;text-transform:uppercase;opacity:.6}
+.ticket div{font-family:"Playfair Display",Georgia,serif;font-size:22px;margin:4px 0 10px}
+.ticket p{margin:0;font-size:14px;opacity:.8}
+.spark{position:fixed;top:-20px;font-size:22px;z-index:9;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+#player{display:none;position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:200px;height:200px;border:0;border-radius:14px;z-index:20;box-shadow:0 8px 30px rgba(0,0,0,.4);background:#000}
+.fallback{display:none;margin-top:10px;font-size:14px;color:var(--muted)}
+.fallback a{color:var(--cyan)}
+#photo{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2}
+</style>
+</head>
+<body>
+<div class="wrap" id="ask">
+  <div class="tag" id="museumName">Museum</div>
+  <div class="frame"><div class="art"><svg id="building" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%" aria-label="National Museum">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1448"/><stop offset="1" stop-color="#4a2a6e"/></linearGradient>
+<linearGradient id="stone" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cdbf9f"/><stop offset=".5" stop-color="#f3e8cf"/><stop offset="1" stop-color="#cdbf9f"/></linearGradient></defs>
+<rect width="200" height="200" fill="url(#sky)"/>
+<circle cx="165" cy="32" r="12" fill="#ffe9a8"/><circle cx="170" cy="29" r="11" fill="#2a1d5c"/>
+<g fill="#fff"><circle cx="25" cy="25" r="1.2"/><circle cx="60" cy="14" r="1"/><circle cx="105" cy="26" r="1.3"/><circle cx="140" cy="12" r="1"/><circle cx="40" cy="48" r="1"/><circle cx="185" cy="60" r="1"/></g>
+<polygon points="100,52 22,92 178,92" fill="url(#stone)"/>
+<polygon points="100,62 40,90 160,90" fill="#2a1d5c" opacity=".35"/>
+<rect x="18" y="92" width="164" height="12" fill="url(#stone)"/>
+<text x="100" y="101" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" letter-spacing="1.5" fill="#6b4f2a" font-weight="700">NATIONAL MUSEUM</text>
+<g fill="url(#stone)"><rect x="30" y="104" width="12" height="50"/><rect x="52" y="104" width="12" height="50"/><rect x="74" y="104" width="12" height="50"/><rect x="114" y="104" width="12" height="50"/><rect x="136" y="104" width="12" height="50"/><rect x="158" y="104" width="12" height="50"/></g>
+<rect x="90" y="112" width="20" height="42" rx="10" fill="#ffd166"/><rect x="94" y="120" width="12" height="34" rx="6" fill="#ff9f43" opacity=".7"/>
+<rect x="20" y="154" width="160" height="8" fill="#e8dcc4"/><rect x="12" y="162" width="176" height="8" fill="#d6c8a6"/><rect x="4" y="170" width="192" height="30" fill="#bfae8a"/>
+<rect x="0" y="188" width="200" height="12" fill="#2a1d5c" opacity=".5"/>
+</svg><img id="photo" alt="National Museum"><b id="emoji">🏛️</b></div></div>
+  <h1 id="title">Be my date at the <em>museum</em>?</h1>
+  <p class="sub" id="sub">One night, a thousand stories, and you.</p>
+  <div class="btns"><button id="yes">Yes 💖</button><button id="no">No</button></div>
+  <div class="hint" id="hint">Choose wisely 😌</div>
+</div>
+
+<div class="wrap" id="stage">
+  <div class="tag">Admit Two</div>
+  <h1>It's a <em>date</em>! 🎉</h1>
+  <div class="ticket">
+    <small>Museum night</small>
+    <div id="tMuseum"></div>
+    <p id="tWhen"></p>
+  </div>
+  <p class="sub">Wear comfy shoes, bring your curiosity ✨</p>
+  <div class="fallback" id="fb">Sound didn't start? <a id="fbLink" href="#" target="_blank" rel="noopener">Tap to play the song</a></div>
+</div>
+
+<iframe id="player" allow="autoplay; encrypted-media; fullscreen" referrerpolicy="strict-origin-when-cross-origin" title="sound"></iframe>
+
+<script>
+// ✏️ EDIT THESE
+var CONFIG = {
+  museum: "National Museum",
+  when: "Sunday, October 11 · 12:00 noon",
+  where: "Main entrance",
+  yesId: "2yJgwwDcgV8",   // YouTube song for YES
+  noId:  "TmFnGK5Dncc",   // YouTube short for NO
+  sound: "files",         // "files" (your mp3s), "youtube", or "synth"
+  yesFile: "sounds/yes.mp3",
+  noFile:  "sounds/no.mp3",
+  photo: "images/museum.jpg"   // your museum picture
+};
+var noLines = [
+  ["Are you <em>sure</em>? 🥺","The paintings are waiting…","😢"],
+  ["Think <em>again</em> 😏","There might be snacks…","🥹"],
+  ["Pretty <em>please</em>?","Even the statues are rooting for me","😭"],
+  ["Don't break my <em>heart</em>","I already bought two tickets 🎟️🎟️","💔"],
+  ["The No button is <em>running</em>!","It's getting shy 🙈","🏃"],
+  ["Now it's <em>tiny</em> 🔬","Just press Yes, it's easier","🥲"],
+  ["You can't <em>catch</em> it 😂","Yes is right there!","🫠"]
+];
+var count=0,yesScale=1,noScale=1;
+var $=function(id){return document.getElementById(id)};
+$("museumName").textContent=CONFIG.museum;
+
+// 🔊 Sounds made with JavaScript (no files, no YouTube) — plays on tap
+var ctx,loopTimer;
+function ac(){
+  if(!ctx){var C=window.AudioContext||window.webkitAudioContext;ctx=new C();}
+  if(ctx.state==="suspended")ctx.resume();
+  return ctx;
+}
+function tone(f,t,d,type,vol,slideTo){
+  var c=ac(),o=c.createOscillator(),g=c.createGain(),st=c.currentTime+t;
+  o.type=type||"sine";
+  o.frequency.setValueAtTime(f,st);
+  if(slideTo)o.frequency.exponentialRampToValueAtTime(slideTo,st+d);
+  g.gain.setValueAtTime(0.0001,st);
+  g.gain.exponentialRampToValueAtTime(vol||0.2,st+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,st+d);
+  o.connect(g);g.connect(c.destination);
+  o.start(st);o.stop(st+d+0.05);
+}
+function synthYes(){
+  [523,659,784,1047,784,1047,1319].forEach(function(f,i){tone(f,i*0.13,0.4,"triangle",0.22)});
+  tone(1568,0.95,0.8,"sine",0.12);
+  var mel=[523,659,784,659,587,698,880,698],n=0,rounds=0;
+  setTimeout(function(){
+    loopTimer=setInterval(function(){
+      tone(mel[n%mel.length],0,0.5,"sine",0.1);
+      n++;
+      if(++rounds>120)clearInterval(loopTimer);
+    },300);
+  },1400);
+}
+function synthNo(){
+  var b=Math.max(140,400-count*30);
+  tone(b,0,0.35,"sawtooth",0.1,b*0.55);
+  tone(b*0.9,0.35,0.5,"sawtooth",0.1,b*0.4);
+}
+var player=$("player"),curId=null;
+function ytPlay(id){
+  if(curId===id)return;
+  curId=id;
+  player.style.display="block";
+  player.src="https://www.youtube.com/embed/"+id+"?autoplay=1&mute=0&playsinline=1&rel=0&loop=1&playlist="+id;
+}
+var yesAudio=new Audio(CONFIG.yesFile),noAudio=new Audio(CONFIG.noFile),yesBad=false,noBad=false;
+yesAudio.preload=noAudio.preload="auto";
+yesAudio.addEventListener("error",function(){yesBad=true});
+noAudio.addEventListener("error",function(){noBad=true});
+function playFile(a){a.currentTime=0;var p=a.play();if(p&&p.catch)p.catch(function(){})}
+function yesSound(){
+  if(CONFIG.sound==="files"){noAudio.pause();if(yesBad){synthYes()}else{playFile(yesAudio)}return;}
+  if(CONFIG.sound==="synth"){synthYes();return;}
+  curId=null;ytPlay(CONFIG.yesId);
+  setTimeout(function(){$("fb").style.display="block";$("fbLink").href="https://www.youtube.com/watch?v="+CONFIG.yesId},2500);
+}
+function noSound(){
+  if(CONFIG.sound==="files"){if(noBad){synthNo()}else{playFile(noAudio)}return;}
+  if(CONFIG.sound==="synth"){synthNo();return;}
+  ytPlay(CONFIG.noId);
+}
+if(CONFIG.photo){var ph=$("photo");ph.onload=function(){ph.style.display="block"};ph.onerror=function(){ph.style.display="none"};ph.src=CONFIG.photo;}
+function moveNo(){
+  var no=$("no");no.classList.add("float");
+  var w=no.offsetWidth,h=no.offsetHeight,p=10;
+  no.style.left=(p+Math.random()*Math.max(0,innerWidth-w-p*2))+"px";
+  no.style.top=(p+Math.random()*Math.max(0,innerHeight-h-p*2))+"px";
+}
+function onNo(e){
+  e.preventDefault();
+  var l=noLines[Math.min(count,noLines.length-1)];count++;
+  $("title").innerHTML=l[0];$("sub").textContent=l[1];$("emoji").textContent=l[2];
+  $("hint").textContent="No pressed: "+count+" time"+(count>1?"s":"");
+  yesScale+=0.35;noScale=Math.max(0.25,noScale-0.14);
+  var y=$("yes"),n=$("no");
+  y.style.fontSize=(20*yesScale)+"px";y.style.padding=(14*yesScale)+"px "+(34*yesScale)+"px";
+  n.style.fontSize=(20*noScale)+"px";n.style.padding=(14*noScale)+"px "+(34*noScale)+"px";
+  moveNo();noSound();
+  if(yesScale>3.4)y.classList.add("big");
+}
+$("no").addEventListener("click",onNo);
+$("no").addEventListener("mouseenter",function(){if(count>0)moveNo()});
+$("yes").addEventListener("click",function(){
+  yesSound();
+  
+  $("no").style.display="none";$("ask").style.display="none";$("stage").style.display="block";
+  $("tMuseum").textContent=CONFIG.museum;
+  $("tWhen").textContent=CONFIG.when+" · "+CONFIG.where;
+  var it=["💖","✨","🎨","💫","💕","🎉"];
+  for(var i=0;i<60;i++)(function(i){setTimeout(function(){
+    var c=document.createElement("div");c.className="spark";
+    c.textContent=it[Math.floor(Math.random()*it.length)];
+    c.style.left=Math.random()*100+"vw";
+    c.style.animationDuration=(2.5+Math.random()*2.5)+"s";
+    document.body.appendChild(c);setTimeout(function(){c.remove()},5500);
+  },i*60)})(i);
+});
+</script>
+</body>
+</html>
